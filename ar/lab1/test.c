@@ -1,4 +1,4 @@
-#include <mpi.h>
+#include <mpi/mpi.h>
 #include <time.h>
 #include <stdio.h>
 #include <string.h>
@@ -76,40 +76,17 @@ void do_compute(double *W, int N, int part, int world_rank, int world_size) {
 
 }
 
-void compute(double *M, double * W, int N, int world_rank, int world_size, int iterations) {
-    int part = (N - 2) / world_size;
-    if (part * world_size < N - 2) {
-        ++part;
-    }
-    int count = N * part;
-    MPI_Scatter(M + N, count, MPI_DOUBLE, W + N, count, MPI_DOUBLE, ROOT, MPI_COMM_WORLD);
-
-    // edges
-    if (world_rank == ROOT) {
-        memcpy(W, M, N*sizeof(double));
-        MPI_Send(M + N * (N-1), N, MPI_DOUBLE, world_size - 1, TAG, MPI_COMM_WORLD);
-    }
-    if (world_rank == world_size - 1) {
-        MPI_Recv(W + bottom_edge(N, world_size) * N, N, MPI_DOUBLE, ROOT, TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-    }
-    for (int iteration = 0; iteration < iterations; ++iteration) {
-        if (world_rank < world_size - 1) {
-            MPI_Send(W + N*part, N, MPI_DOUBLE, world_rank + 1, TAG, MPI_COMM_WORLD);
+void compute(int world_rank, int world_size, int iterations) {
+    int k;
+    for(int iter = 0; iter<iterations; ++iter) {
+        if (world_rank == 0) {
+            MPI_Send(&k, 1, MPI_BYTE,1,TAG,MPI_COMM_WORLD);
+            MPI_Recv(&k, 1, MPI_BYTE,1,TAG,MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        } else {
+            MPI_Recv(&k, 1, MPI_BYTE,0,TAG,MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            MPI_Send(&k, 1, MPI_BYTE,0,TAG,MPI_COMM_WORLD);
         }
-        if (world_rank > 0) {
-            MPI_Recv(W, N, MPI_DOUBLE, world_rank - 1, TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-        }
-        if (world_rank > 0) {
-            MPI_Send(W + N, N, MPI_DOUBLE, world_rank - 1, TAG, MPI_COMM_WORLD);
-        }
-        if (world_rank < world_size - 1) {
-            MPI_Recv(W + N*(part+1), N, MPI_DOUBLE, world_rank + 1, TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-        }
-        do_compute(W, N, part, world_rank, world_size);
-     //   sleep(1);
     }
-    MPI_Barrier(MPI_COMM_WORLD);
-    MPI_Gather(W + N, count, MPI_DOUBLE, M + N, count, MPI_DOUBLE, ROOT, MPI_COMM_WORLD);
 }
 
 
@@ -146,7 +123,7 @@ int main(int argc, char** argv) {
         gettimeofday(&tv0, NULL);
     }
 
-    compute(M, W, N, world_rank, world_size, 300);
+    compute(world_rank, world_size, 1);
 
     if (world_rank == 0) {
         gettimeofday(&tv1, NULL);
