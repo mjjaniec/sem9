@@ -60,3 +60,13 @@ void random_perm(int* tab, int size) {
         tab[i]^=tab[j];
     }
 }
+
+void* mdmcpy(void* dest, void *src, int count) {
+    memcpy(dest, src, count);
+    return dest + count;
+}
+
+void *msmcpy(void* dest, void* src, int count) {
+    memcpy(dest, src, count);
+    return src + count;
+}

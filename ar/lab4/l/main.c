@@ -1,7 +1,10 @@
 #include <stdio.h>
 #include <sys/time.h>
-#include <mpi/mpi.h>
+#include <mpi.h>
+#include <stdbool.h>
 
+const int PREFIX = 3;
+const bool CIRCLE = false;
 #include "graph.c"
 const int ROOT = 0;
 
@@ -18,7 +21,7 @@ void brodcast_graph(Graph* graph, int world_rank) {
 
 
 double recurse(Graph* graph, bool* available, double actual, double best, int depth, int* order, int * bestOrder) {
-    if (actual > best) {
+    if (actual + graph->potentials[graph->size - depth + 1] > best) {
         return best;
     }
     if (depth == graph->size) {
@@ -132,7 +135,7 @@ void worker(Graph* graph, int prefix) {
 
 
 void worker_sequent(Graph* graph, void* data, int prefix) {
-    double best = *((double*)data);
+    double* best = ((double*)data);
     int* order = (int*)(data + sizeof(double));
     int* bestOrder = malloc(graph->size * sizeof(int));
     bool* available = malloc(graph->size * sizeof(bool));
@@ -145,7 +148,7 @@ void worker_sequent(Graph* graph, void* data, int prefix) {
             actual += Graph_cost(graph, order[i-1], order[i]);
         }
     }
-    *((double*)data) = recurse(graph, available, actual, best, prefix, order, bestOrder);
+    *best= recurse(graph, available, actual, *best, prefix, order, bestOrder);
     memcpy(data + sizeof(double), bestOrder, graph->size*sizeof(int));
     free(available);
     free(bestOrder);
@@ -158,16 +161,16 @@ void sequent(Graph* graph, SalesmanPath* bestPath, int prefix) {
     int data_size = sizeof(double) + sizeof(int) * graph->size;
     void* data = malloc(data_size);
     int* order = (int*)(data + sizeof(double));
-
+    double* best = (double*)data;
 
     for (int i = 0; i < all; ++i) {
         identity(order, graph->size);
         set_perm(order, graph->size, i, prefix);
-        *((double*)data) = bestPath->cost;
+        *best = bestPath->cost;
 
 
         worker_sequent(graph, data, prefix);
-        double cost = *((double*)data);
+        double cost = *best;
         if (cost < bestPath->cost) {
             bestPath->cost = cost;
             memcpy(bestPath->vertexes, data + sizeof(double), sizeof(int) * graph->size);
@@ -179,13 +182,17 @@ void sequent(Graph* graph, SalesmanPath* bestPath, int prefix) {
 
 
 void compute_salesman(Graph* graph, SalesmanPath* bestPath, int world_rank, int world_size) {
-    int prefix = 3;
+    int prefix = PREFIX;
     brodcast_graph(graph, world_rank);
-//    sequent(graph, bestPath, prefix);
-    if (world_rank == ROOT) {
-        master(graph, bestPath, prefix, world_size);
+    bool seq = 0;
+    if (seq) {
+        sequent(graph, bestPath, prefix);
     } else {
-        worker(graph, prefix);
+        if (world_rank == ROOT) {
+            master(graph, bestPath, prefix, world_size);
+        } else {
+            worker(graph, prefix);
+        }
     }
 }
 
