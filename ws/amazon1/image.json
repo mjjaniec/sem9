@@ -1,0 +1,88 @@
+{
+    "OwnerId": "197705734439", 
+    "ReservationId": "r-ff752d1a", 
+    "Groups": [], 
+    "Instances": [
+        {
+            "Monitoring": {
+                "State": "disabled"
+            }, 
+            "PublicDnsName": null, 
+            "KernelId": "aki-52a34525", 
+            "State": {
+                "Code": 0, 
+                "Name": "pending"
+            }, 
+            "EbsOptimized": false, 
+            "LaunchTime": "2015-01-14T13:11:09.000Z", 
+            "PrivateIpAddress": "172.31.17.115", 
+            "ProductCodes": [], 
+            "VpcId": "vpc-f9b07f9c", 
+            "StateTransitionReason": null, 
+            "InstanceId": "i-2327fbc7", 
+            "ImageId": "ami-48ab2f3f", 
+            "PrivateDnsName": "ip-172-31-17-115.eu-west-1.compute.internal", 
+            "KeyName": "mjjaniec", 
+            "SecurityGroups": [
+                {
+                    "GroupName": "ssh_http", 
+                    "GroupId": "sg-0135a864"
+                }
+            ], 
+            "ClientToken": null, 
+            "SubnetId": "subnet-4bcf712e", 
+            "InstanceType": "t1.micro", 
+            "NetworkInterfaces": [
+                {
+                    "Status": "in-use", 
+                    "MacAddress": "02:07:8c:10:dd:31", 
+                    "SourceDestCheck": true, 
+                    "VpcId": "vpc-f9b07f9c", 
+                    "Description": null, 
+                    "NetworkInterfaceId": "eni-7ff03c1b", 
+                    "PrivateIpAddresses": [
+                        {
+                            "PrivateDnsName": "ip-172-31-17-115.eu-west-1.compute.internal", 
+                            "Primary": true, 
+                            "PrivateIpAddress": "172.31.17.115"
+                        }
+                    ], 
+                    "PrivateDnsName": "ip-172-31-17-115.eu-west-1.compute.internal", 
+                    "Attachment": {
+                        "Status": "attaching", 
+                        "DeviceIndex": 0, 
+                        "DeleteOnTermination": true, 
+                        "AttachmentId": "eni-attach-9fb1e9d1", 
+                        "AttachTime": "2015-01-14T13:11:09.000Z"
+                    }, 
+                    "Groups": [
+                        {
+                            "GroupName": "ssh_http", 
+                            "GroupId": "sg-0135a864"
+                        }
+                    ], 
+                    "SubnetId": "subnet-4bcf712e", 
+                    "OwnerId": "197705734439", 
+                    "PrivateIpAddress": "172.31.17.115"
+                }
+            ], 
+            "SourceDestCheck": true, 
+            "Placement": {
+                "Tenancy": "default", 
+                "GroupName": null, 
+                "AvailabilityZone": "eu-west-1b"
+            }, 
+            "Hypervisor": "xen", 
+            "BlockDeviceMappings": [], 
+            "Architecture": "x86_64", 
+            "StateReason": {
+                "Message": "pending", 
+                "Code": "pending"
+            }, 
+            "RootDeviceName": "/dev/sda1", 
+            "VirtualizationType": "paravirtual", 
+            "RootDeviceType": "ebs", 
+            "AmiLaunchIndex": 0
+        }
+    ]
+}

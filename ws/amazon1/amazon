@@ -1,0 +1,54 @@
+
+
+START_TIME=$(date +%s)
+#run instance
+aws ec2 run-instances --image-id ami-48ab2f3f --count 1 --instance-type t1.micro \
+	--security-groups ssh_http --key-name mjjaniec > image.json
+RID=`jq .ReservationId image.json | cut -d\" -f2`
+echo "RID: $RID"
+
+#wait until instance start
+while :
+do
+	sleep 1
+	aws ec2 describe-instances > instances.json
+	STATE=`jq ".Reservations[]" instances.json \
+		| jq "select(.ReservationId|contains(\"$RID\"))" \
+		| jq ".Instances[0].State.Name" \
+		| cut -d\" -f2`
+	echo "$STATE"
+	if [ $STATE = "running" ] ; then
+		break
+	fi
+done
+
+#get public ip
+PIP=`jq ".Reservations[]" instances.json \
+	| jq "select(.ReservationId|contains(\"$RID\"))" \
+	| jq ".Instances[0].PublicIpAddress" \
+	| cut -d\" -f2`
+IID=`jq ".Reservations[]" instances.json \
+	| jq "select(.ReservationId|contains(\"$RID\"))" \
+	| jq ".Instances[0].InstanceId" \
+	| cut -d\" -f2`
+echo "PIP: $PIP, IID: $IID"
+
+#get the index.html
+until wget --timeout=1 --tries=1 $PIP 2>/dev/null
+do 
+	sleep 1
+	echo "waiting for httpd"
+done
+
+echo "index.html downloaded"
+
+END_TIME=$(date +%s)
+echo "================================================="
+echo -n "instnce start-up time: "
+echo $((END_TIME - START_TIME))
+echo "================================================="
+
+#terminate instance
+aws ec2 terminate-instances --instance-id $IID
+
+

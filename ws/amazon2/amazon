@@ -1,0 +1,49 @@
+#plik o rozmiarze 10MB
+dd if=/dev/zero of=test bs=1024 count=10240
+
+# CLI - poza chmurą
+
+#upstream
+time aws s3 cp test s3://misows
+
+#real	0m32.383s
+#user	0m0.886s
+#sys	0m0.161s
+#przepustowośc 2.5kbps
+
+#downstream
+time aws s3 cp s3://misows/test test2
+
+# Tabelka
+# 				|	Upstream 	|	Downstream
+# Cli - outside	|	 2.5kbps	|	 4.9kbps
+# Cli - inside	| 	46.8kbps	|	53.5kbps
+# java - outside|	 2.6kbps	| 	11.4kbps
+# java - inside	|  142.6kbps	|   67.6kbps
+
+
+# java code
+
+# package pl.mjjaniec;
+# import com.amazonaws.services.s3.AmazonS3Client;
+# import com.amazonaws.services.s3.model.GetObjectRequest;
+# import com.amazonaws.services.s3.model.S3Object;
+# import java.io.File;
+#
+# public class Main {
+#     public static void main(String[] args) {
+#         AmazonS3Client client = new AmazonS3Client();
+#         long millis = System.currentTimeMillis();
+#         File localFile = new File("test");
+#         client.getObject(new GetObjectRequest("misows", "test"), localFile);
+#         double seconds = (System.currentTimeMillis() - millis) / 1000;
+#         double size = 80;
+#         System.out.println("Downstream: time: " + (size / seconds) + "kbps");
+#         millis = System.currentTimeMillis();
+#         client.putObject("misows", "test", localFile);
+#         seconds = (System.currentTimeMillis() - millis) / 1000;
+#         System.out.println("Upstream: " + (size / seconds) + "kbps");
+#     }
+# }
+
+
